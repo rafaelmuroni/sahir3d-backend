@@ -38,27 +38,26 @@ pedidosRouter.post("/", async (req, res) => {
 
     const preference = new Preference(mpClient);
     const resultado = await preference.create({
-  body: {
-    items: [
-      {
-        id: String(pedidoId),
-        title: `Sahir 3D — ${modelo || "peça personalizada"} (${tamanho}, ${material})`,
-        description: String(acabamento),
-        quantity: 1,
-        currency_id: "BRL",
-        unit_price: Number(preco), // 1. Força o tipo de dado para Número
-      },
-    ],
-external_reference: pedidoId,
+      body: {
+        items: [
+          {
+            id: String(pedidoId),
+            title: `Sahir 3D — ${modelo || "peça personalizada"} (${tamanho}, ${material})`,
+            description: String(acabamento),
+            quantity: 1,
+            currency_id: "BRL",
+            unit_price: Number(preco),
+          },
+        ],
+        external_reference: pedidoId,
         back_urls: {
           success: `http://localhost:56423/pedido-sucesso.html?pedido=${pedidoId}`,
           failure: `http://localhost:56423/pedido-falha.html?pedido=${pedidoId}`,
           pending: `http://localhost:56423/pedido-pendente.html?pedido=${pedidoId}`,
         },
-      
-
-     notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
-};
+        notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
+      },
+    });
 
     res.json({
       pedidoId,
