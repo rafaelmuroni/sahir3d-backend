@@ -49,9 +49,6 @@ pedidosRouter.post("/", async (req, res) => {
         unit_price: Number(preco), // 1. Força o tipo de dado para Número
       },
     ],
-    payer: {
-      name: String(cliente.nome),
-      email: cliente.email,
     },
 external_reference: pedidoId,
         back_urls: {
