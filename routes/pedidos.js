@@ -49,7 +49,6 @@ pedidosRouter.post("/", async (req, res) => {
         unit_price: Number(preco), // 1. Força o tipo de dado para Número
       },
     ],
-    },
 external_reference: pedidoId,
         back_urls: {
           success: `http://localhost:56423/pedido-sucesso.html?pedido=${pedidoId}`,
@@ -59,8 +58,7 @@ external_reference: pedidoId,
       
 
      notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
-  },
-});
+};
 
     res.json({
       pedidoId,
