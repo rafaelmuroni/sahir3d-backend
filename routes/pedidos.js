@@ -108,12 +108,16 @@ webhookRouter.post("/mercadopago", async (req, res) => {
       refunded: "reembolsado",
     };
 
+      console.log(`Webhook recebido do Mercado Pago: payment ${data.id}, status ${pagamento.status}`);
+
     const novoStatus = statusMap[pagamento.status] || pagamento.status;
 
     await atualizarStatusPedido(pedidoId, novoStatus, {
       mercadopagoPaymentId: pagamento.id,
       statusDetail: pagamento.status_detail,
     });
+
+    console.log(`Pedido ${pedidoId} atualizado para status: ${novoStatus}`);
 
     if (novoStatus === "pago") {
       // TODO: dispare aqui seu aviso (e-mail, WhatsApp, Slack) de que um
