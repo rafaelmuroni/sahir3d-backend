@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sahir 3D | Colecionáveis geek impressos em 3D</title>
+<meta name="description" content="Bustos, action figures e dioramas geek impressos em 3D sob encomenda, em resina 8K ou PLA, com acabamento e pintura feitos à mão. Monte sua peça, envie seu STL ou peça um orçamento.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#09080D',
+          surface: '#131019',
+          surface2: '#1B1724',
+          line: 'rgba(237,233,247,0.09)',
+          ink: '#F1EEF7',
+          muted: '#948EA6',
+          purple: '#8B5CF6',
+          purpledeep: '#4C1D95',
+          purplemid: '#6D28D9',
+          neon: '#39FFB0',
+          steel: '#4A4658'
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'ui-sans-serif', 'sans-serif'],
+          sans: ['"IBM Plex Sans"', 'ui-sans-serif', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root { color-scheme: dark; }
+  html { scroll-behavior: smooth; }
+  body { background:#09080D; }
+
+  /* ---------- blueprint grid backdrop ---------- */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+    background-position: -1px -1px;
+  }
+  .grid-bg-fine {
+    background-image:
+      linear-gradient(rgba(237,233,247,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(237,233,247,0.045) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+
+  /* ---------- HUD corner brackets ---------- */
+  .hud {
+    position: relative;
+  }
+  .hud::before, .hud::after,
+  .hud .hud-br, .hud .hud-bl { content:""; position:absolute; width:14px; height:14px; border-color: rgba(139,92,246,0.55); pointer-events:none; }
+  .hud::before { top:-1px; left:-1px; border-top:1.5px solid; border-left:1.5px solid; }
+  .hud::after { top:-1px; right:-1px; border-top:1.5px solid; border-right:1.5px solid; }
+  .hud .hud-bl { bottom:-1px; left:-1px; border-bottom:1.5px solid; border-left:1.5px solid; }
+  .hud .hud-br { bottom:-1px; right:-1px; border-bottom:1.5px solid; border-right:1.5px solid; }
+
+  /* ---------- real 3D model viewer frame (hero) ---------- */
+  .model-frame {
+    background: radial-gradient(120% 90% at 30% 15%, #2A1F42 0%, #17111F 75%);
+    box-shadow: 0 0 90px -20px rgba(139,92,246,0.5);
+  }
+  model-viewer {
+    width: 100%; height: 100%;
+    --poster-color: transparent;
+    background-color: transparent;
+  }
+  model-viewer::part(default-progress-bar) { display: none; }
+  .bust-wrap { perspective: 1400px; }
+  .bust-scan {
+    position:absolute; left:0; right:0; height:38%;
+    background: linear-gradient(to bottom, transparent, rgba(57,255,176,0.35), transparent);
+    animation: scan-sweep 3.6s ease-in-out infinite;
+  }
+  @keyframes scan-sweep {
+    0% { top:-40%; opacity:0; }
+    10% { opacity:1; }
+    50% { top:100%; opacity:1; }
+    60% { opacity:0; }
+    100% { top:100%; opacity:0; }
+  }
+
+  /* ---------- category facet badges ---------- */
+  .facet-badge {
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: linear-gradient(155deg, #241C36, #14101D 65%);
+    border: 1px solid rgba(139,92,246,0.35);
+    transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+  }
+  .cat-card:hover .facet-badge {
+    transform: scale(1.07) rotate(2deg);
+    box-shadow: 0 0 40px -6px rgba(139,92,246,0.6);
+    border-color: rgba(139,92,246,0.8);
+  }
+  .cat-card:hover .cat-img { transform: scale(1.08); }
+  .cat-card:hover .cat-scan { opacity:1; }
+
+  .scanline-overlay {
+    position:absolute; inset:0; opacity:0; transition: opacity .3s ease;
+    background: linear-gradient(to bottom, transparent 40%, rgba(57,255,176,0.16) 50%, transparent 60%);
+  }
+
+  /* ---------- product card hover data ---------- */
+  /* on touch devices :hover never fires, so info stays visible by default; the fade-in is a desktop-only refinement */
+  .prod-card .prod-data { opacity:1; }
+  @media (min-width: 768px) {
+    .prod-card .prod-data { opacity:0; transform: translateY(6px); transition: all .3s ease; }
+    .prod-card:hover .prod-data { opacity:1; transform: translateY(0); }
+  }
+  .prod-card:hover .prod-img { transform: scale(1.06) rotate(-1deg); }
+  .prod-card .prod-btn-label span { display:inline-block; transition: transform .25s ease; }
+
+  /* ---------- guard against accidental horizontal scroll on mobile ---------- */
+  html, body { overflow-x: hidden; }
+
+  /* ---------- mobile sticky estimate bar (configurador) ---------- */
+  #mobileEstimateBar {
+    position: fixed; left:0; right:0; bottom:0; z-index:45;
+    transform: translateY(110%); transition: transform .35s ease;
+    background: rgba(19,16,25,0.96); backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(139,92,246,0.35);
+  }
+  #mobileEstimateBar.visible { transform: translateY(0); }
+
+  /* ---------- buttons ---------- */
+  .btn-primary {
+    background: linear-gradient(135deg, #9D6BFF, #6D28D9);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 30px -10px rgba(139,92,246,0.7);
+  }
+  .btn-primary:hover { box-shadow: 0 0 0 1px rgba(255,255,255,0.14) inset, 0 10px 36px -8px rgba(139,92,246,0.9); }
+  .btn-outline { border:1px solid rgba(237,233,247,0.25); }
+  .btn-outline:hover { border-color: rgba(139,92,246,0.7); background: rgba(139,92,246,0.08); }
+
+  /* ---------- scrollbar ---------- */
+  ::-webkit-scrollbar { height:8px; width:8px; }
+  ::-webkit-scrollbar-thumb { background: #3A3546; border-radius:4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ---------- carousel snap (mobile) ---------- */
+  .snap-row { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+  .snap-item { scroll-snap-align: start; }
+  .snap-row::-webkit-scrollbar { display:none; }
+  .snap-row { scrollbar-width:none; }
+
+  /* ---------- range sliders (before/after, configurador) ---------- */
+  input[type=range].compare-slider {
+    -webkit-appearance:none; appearance:none; width:100%; height:100%;
+    background:transparent; position:absolute; inset:0; margin:0; cursor:ew-resize; z-index:20;
+  }
+  input[type=range].compare-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:48px; height:48px; border-radius:9999px;
+    background: #8B5CF6; border:3px solid #F1EEF7; cursor:ew-resize;
+    box-shadow: 0 0 0 6px rgba(139,92,246,0.18);
+    margin-top: 0;
+  }
+  input[type=range].compare-slider::-moz-range-thumb {
+    width:44px; height:44px; border-radius:9999px; background:#8B5CF6; border:3px solid #F1EEF7; cursor:ew-resize;
+  }
+  input[type=range].compare-slider::-webkit-slider-runnable-track { background:transparent; height:100%; }
+
+  /* ---------- accordion (FAQ) ---------- */
+  details.faq > summary { list-style:none; cursor:pointer; }
+  details.faq > summary::-webkit-details-marker { display:none; }
+  details.faq[open] .faq-chevron { transform: rotate(45deg); }
+  .faq-chevron { transition: transform .25s ease; }
+
+  /* ---------- gamification bar ---------- */
+  .prog-bar { background: repeating-linear-gradient(90deg, #8B5CF6 0 2px, #6D28D9 2px 4px); }
+
+  /* ---------- upload zone drag state ---------- */
+  #dropzone.drag-active { border-color:#8B5CF6; background: rgba(139,92,246,0.08); box-shadow: 0 0 60px -10px rgba(139,92,246,0.5); }
+
+  /* ---------- reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  }
+
+  /* ---------- focus visibility ---------- */
+  a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 2px solid #39FFB0; outline-offset: 2px;
+  }
+
+  .vert-text { writing-mode: vertical-rl; }
+</style>
+</head>
+<body class="bg-bg text-ink font-sans antialiased">
+
+<!-- ============ WHATSAPP FLOAT ============ -->
+<a href="https://wa.me/5500000000000" target="_blank" rel="noopener" id="whatsappFloat"
+   class="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 flex items-center gap-2 bg-neon text-bg font-mono text-xs font-semibold px-4 py-3.5 rounded-full shadow-[0_10px_30px_-8px_rgba(57,255,176,0.6)] hover:brightness-110 transition-all duration-300"
+   aria-label="Falar com a gente no WhatsApp">
+  <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+  <span class="hidden sm:inline tracking-wide">FALAR COM A GENTE</span>
+</a>
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-40 bg-bg/85 backdrop-blur border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between gap-4">
+    <a href="#top" class="flex items-center gap-2 shrink-0">
+      <span class="w-8 h-8 rounded-full border border-purple/60 flex items-center justify-center">
+        <i class="fa-solid fa-cube text-purple text-sm"></i>
+      </span>
+      <span class="font-display font-bold text-lg tracking-tight">SAHIR <span class="text-purple">3D</span></span>
+    </a>
+
+    <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-ink/75">
+      <a href="#universos" class="hover:text-purple transition-colors">Universos</a>
+      <a href="#drops" class="hover:text-purple transition-colors">Drops da semana</a>
+      <a href="#configurador" class="hover:text-purple transition-colors">Monte a sua</a>
+      <a href="#processo" class="hover:text-purple transition-colors">Como funciona</a>
+      <a href="#estante" class="hover:text-purple transition-colors">Estante da comunidade</a>
+    </nav>
+
+    <div class="flex items-center gap-4 shrink-0">
+      <button class="hidden md:flex items-center gap-2 text-ink/60 hover:text-purple transition-colors text-sm" aria-label="Buscar peça ou código">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span class="font-mono text-xs">BUSCAR CÓDIGO</span>
+      </button>
+      <button class="relative hover:text-purple transition-colors" aria-label="Abrir inventário, 2 itens">
+        <i class="fa-solid fa-box-archive text-lg"></i>
+        <span class="absolute -top-2 -right-2 bg-purple text-[10px] font-bold font-mono w-4 h-4 rounded-full flex items-center justify-center">2</span>
+      </button>
+      <button type="button" id="menuToggle" class="lg:hidden" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobileMenu">
+        <i class="fa-solid fa-bars text-lg" id="menuIcon"></i>
+      </button>
+    </div>
+  </div>
+  <nav id="mobileMenu" class="hidden lg:hidden border-t border-line bg-bg px-5 py-4 flex flex-col gap-4 text-sm font-medium">
+    <a href="#universos" class="py-1">Universos</a>
+    <a href="#drops" class="py-1">Drops da semana</a>
+    <a href="#configurador" class="py-1">Monte a sua</a>
+    <a href="#processo" class="py-1">Como funciona</a>
+    <a href="#estante" class="py-1">Estante da comunidade</a>
+  </nav>
+</header>
+
+<!-- ============ HERO ============ -->
+<section id="top" class="relative overflow-hidden grid-bg border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-8 md:py-24 grid lg:grid-cols-[1.05fr_0.95fr] gap-14 items-center">
+
+    <div class="relative z-10">
+      <div class="inline-flex items-center gap-2 font-mono text-[11px] text-purple/90 border border-purple/30 rounded-full px-3 py-1 mb-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-neon animate-pulse"></span>
+        OFICINA ABERTA — PEDIDOS DA SEMANA EM ANDAMENTO
+      </div>
+
+      <h1 class="font-display font-bold leading-[0.98] text-5xl sm:text-6xl md:text-7xl tracking-tight">
+        SEU PERSONAGEM.<br>
+        <span class="text-purple">AGORA EM 3D.</span>
+      </h1>
+
+      <p class="mt-6 text-lg text-muted max-w-md leading-relaxed">
+        Colecionáveis que saem da tela e vão para sua estante — modelados, impressos e pintados à mão, peça a peça.
+      </p>
+
+      <div class="mt-9 flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <a href="#drops" class="btn-primary rounded-full px-7 py-3.5 font-semibold text-sm text-white text-center">Ver coleção</a>
+        <a href="#configurador" class="btn-outline rounded-full px-7 py-3.5 font-semibold text-sm text-center">Quero personalizar</a>
+      </div>
+
+      <div class="mt-10 md:mt-12 flex items-center gap-5 sm:gap-8 font-mono text-[11px] sm:text-xs text-muted">
+        <div><span class="text-ink text-lg sm:text-xl font-display font-semibold">1.200+</span><br>peças entregues</div>
+        <div class="w-px h-9 bg-line shrink-0"></div>
+        <div><span class="text-ink text-lg sm:text-xl font-display font-semibold">4.9</span><br>nota média</div>
+        <div class="w-px h-9 bg-line shrink-0"></div>
+        <div><span class="text-ink text-lg sm:text-xl font-display font-semibold">27</span><br>universos geek</div>
+      </div>
+    </div>
+
+    <!-- interactive 3D model viewer -->
+    <div class="relative mt-4 lg:mt-0">
+      <div class="bust-wrap relative mx-auto max-w-[280px] sm:max-w-[340px] lg:max-w-[400px] select-none">
+        <div class="hud model-frame aspect-[3/4] relative overflow-hidden">
+          <!-- EXEMPLO: troque o "src" abaixo pelo link do seu próprio arquivo .glb/.gltf -->
+          <model-viewer
+            src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+            alt="Prévia do colecionável em 3D"
+            camera-controls
+            touch-action="pan-y"
+            interaction-prompt="none"
+            auto-rotate
+            auto-rotate-delay="1500"
+            rotation-per-second="16deg"
+            shadow-intensity="1"
+            exposure="0.9"
+            environment-image="neutral"
+            loading="eager">
+          </model-viewer>
+          <div class="bust-scan pointer-events-none"></div>
+          <span class="hud-bl"></span><span class="hud-br"></span>
+        </div>
+      </div>
+
+      <!-- HUD readouts -->
+      <div class="absolute -top-3 -left-3 sm:-left-8 font-mono text-[10px] leading-tight text-purple/80 bg-bg/80 border border-line px-2.5 py-1.5 backdrop-blur">
+        PROJETO #0427<br>
+        <span class="text-neon">STATUS: DISPONÍVEL</span>
+      </div>
+      <div class="absolute -bottom-3 -right-3 sm:-right-8 font-mono text-[10px] leading-tight text-purple/80 bg-bg/80 border border-line px-2.5 py-1.5 backdrop-blur text-right">
+        MATERIAL: RESINA 8K<br>ESCALA: 1/6
+      </div>
+      <p class="text-center mt-5 font-mono text-[11px] text-muted flex items-center justify-center gap-2">
+        <i class="fa-solid fa-arrows-left-right"></i> arraste para girar
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UNIVERSOS ============ -->
+<section id="universos" class="py-14 md:py-28 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="flex items-end justify-between gap-6 mb-10 md:mb-14">
+      <h2 class="font-display font-bold text-3xl md:text-4xl max-w-md">Qual é o seu universo?</h2>
+      <p class="hidden md:block text-muted text-sm max-w-xs font-mono">TOQUE OU PASSE O MOUSE PARA EXPLORAR CADA CATEGORIA</p>
+    </div>
+    <p class="md:hidden flex items-center gap-2 text-muted text-xs font-mono mb-5">
+      <i class="fa-solid fa-arrow-right-arrow-left"></i> DESLIZE PARA VER TODOS OS UNIVERSOS
+    </p>
+
+    <div class="flex md:grid md:grid-cols-3 lg:grid-cols-6 gap-5 overflow-x-auto snap-row md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0 pb-4 md:pb-0">
+      <!-- card template x6 -->
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-gamepad cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">GAMES</p>
+      </a>
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-mask cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">ANIME</p>
+      </a>
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-dice-d20 cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">RPG</p>
+      </a>
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-shield-halved cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">HERÓIS</p>
+      </a>
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-rocket cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">SCI-FI</p>
+      </a>
+      <a href="#drops" class="cat-card snap-item shrink-0 w-[150px] md:w-auto group">
+        <div class="facet-badge relative aspect-square flex items-center justify-center overflow-hidden">
+          <div class="scanline-overlay cat-scan"></div>
+          <i class="fa-solid fa-skull cat-img text-4xl text-purple transition-transform duration-500"></i>
+        </div>
+        <p class="mt-3 font-mono text-xs tracking-wide text-ink/80">TERROR</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DROPS DA SEMANA ============ -->
+<section id="drops" class="py-14 md:py-28 border-b border-line grid-bg-fine">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="flex items-end justify-between gap-6 mb-10 md:mb-14">
+      <div>
+        <p class="font-mono text-xs text-purple mb-2">LOTE ATUAL · ESTOQUE LIMITADO</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Drops da semana</h2>
+      </div>
+      <a href="#" class="hidden md:inline-block font-mono text-xs text-muted hover:text-purple border-b border-transparent hover:border-purple transition">VER CATÁLOGO COMPLETO</a>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- product 1 -->
+      <article class="prod-card hud bg-surface border border-line overflow-hidden group">
+        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center">
+          <i class="fa-solid fa-person-rifle prod-img text-6xl text-purple/80 transition-transform duration-500"></i>
+          <span class="absolute top-3 left-3 font-mono text-[10px] bg-neon text-bg px-2 py-0.5 font-semibold">LIMITED DROP</span>
+          <div class="prod-data absolute bottom-3 left-3 right-3 font-mono text-[10px] text-neon bg-bg/80 px-2 py-1.5 border border-neon/30">
+            ALTURA: 18CM · PESO: 320G · RESINA 8K
+          </div>
+        </div>
+        <div class="p-4">
+          <p class="font-mono text-[10px] text-muted mb-1">CAÇADOR — LINHA SOMBRA</p>
+          <h3 class="font-display font-semibold">Sentinela Noturna</h3>
+          <div class="text-purple text-xs my-1.5" aria-label="5 de 5 estrelas">★★★★★</div>
+          <div class="flex items-center justify-between mt-3">
+            <span class="font-display font-semibold text-lg">R$ 189,90</span>
+            <button class="prod-btn-label font-mono text-[10px] border border-purple/50 hover:bg-purple hover:text-white transition px-2.5 py-2 rounded-full" onclick="addToInventory(this)">
+              <span>ADICIONAR ▸</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- product 2 -->
+      <article class="prod-card hud bg-surface border border-line overflow-hidden group">
+        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center">
+          <i class="fa-solid fa-dragon prod-img text-6xl text-purple/80 transition-transform duration-500"></i>
+          <span class="absolute top-3 left-3 font-mono text-[10px] bg-purple text-white px-2 py-0.5 font-semibold">BEST SELLER</span>
+          <div class="prod-data absolute bottom-3 left-3 right-3 font-mono text-[10px] text-neon bg-bg/80 px-2 py-1.5 border border-neon/30">
+            ALTURA: 24CM · PESO: 410G · PINTURA MANUAL
+          </div>
+        </div>
+        <div class="p-4">
+          <p class="font-mono text-[10px] text-muted mb-1">GUARDIÃO — LINHA ANCESTRAL</p>
+          <h3 class="font-display font-semibold">Wyrm de Obsidiana</h3>
+          <div class="text-purple text-xs my-1.5" aria-label="5 de 5 estrelas">★★★★★</div>
+          <div class="flex items-center justify-between mt-3">
+            <span class="font-display font-semibold text-lg">R$ 249,90</span>
+            <button class="prod-btn-label font-mono text-[10px] border border-purple/50 hover:bg-purple hover:text-white transition px-2.5 py-2 rounded-full" onclick="addToInventory(this)">
+              <span>ADICIONAR ▸</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- product 3 -->
+      <article class="prod-card hud bg-surface border border-line overflow-hidden group">
+        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center">
+          <i class="fa-solid fa-robot prod-img text-6xl text-purple/80 transition-transform duration-500"></i>
+          <span class="absolute top-3 left-3 font-mono text-[10px] bg-white/90 text-bg px-2 py-0.5 font-semibold">NOVO</span>
+          <div class="prod-data absolute bottom-3 left-3 right-3 font-mono text-[10px] text-neon bg-bg/80 px-2 py-1.5 border border-neon/30">
+            ALTURA: 20CM · PESO: 380G · PLA REFORÇADO
+          </div>
+        </div>
+        <div class="p-4">
+          <p class="font-mono text-[10px] text-muted mb-1">UNIDADE — LINHA VETOR</p>
+          <h3 class="font-display font-semibold">Mecha VK-09</h3>
+          <div class="text-purple text-xs my-1.5" aria-label="4.5 de 5 estrelas">★★★★☆</div>
+          <div class="flex items-center justify-between mt-3">
+            <span class="font-display font-semibold text-lg">R$ 219,90</span>
+            <button class="prod-btn-label font-mono text-[10px] border border-purple/50 hover:bg-purple hover:text-white transition px-2.5 py-2 rounded-full" onclick="addToInventory(this)">
+              <span>ADICIONAR ▸</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- product 4 -->
+      <article class="prod-card hud bg-surface border border-line overflow-hidden group">
+        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center">
+          <i class="fa-solid fa-hat-wizard prod-img text-6xl text-purple/80 transition-transform duration-500"></i>
+          <span class="absolute top-3 left-3 font-mono text-[10px] bg-neon text-bg px-2 py-0.5 font-semibold">PINTURA MANUAL</span>
+          <div class="prod-data absolute bottom-3 left-3 right-3 font-mono text-[10px] text-neon bg-bg/80 px-2 py-1.5 border border-neon/30">
+            ALTURA: 16CM · PESO: 290G · RESINA 8K
+          </div>
+        </div>
+        <div class="p-4">
+          <p class="font-mono text-[10px] text-muted mb-1">ARCANISTA — LINHA GRIMÓRIO</p>
+          <h3 class="font-display font-semibold">Feiticeira do Véu</h3>
+          <div class="text-purple text-xs my-1.5" aria-label="5 de 5 estrelas">★★★★★</div>
+          <div class="flex items-center justify-between mt-3">
+            <span class="font-display font-semibold text-lg">R$ 174,90</span>
+            <button class="prod-btn-label font-mono text-[10px] border border-purple/50 hover:bg-purple hover:text-white transition px-2.5 py-2 rounded-full" onclick="addToInventory(this)">
+              <span>ADICIONAR ▸</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIGURADOR ============ -->
+<section id="configurador" class="py-14 md:py-28 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <p class="font-mono text-xs text-purple mb-2">FERRAMENTA DE PROJETO</p>
+    <h2 class="font-display font-bold text-3xl md:text-4xl mb-12 max-w-lg">Monte seu colecionável</h2>
+
+    <div class="grid lg:grid-cols-[1.2fr_1fr] gap-10 items-start">
+      <div class="space-y-8">
+
+        <div>
+          <p class="font-mono text-xs text-muted mb-3">ETAPA 1 — ESCOLHA O MODELO</p>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="modelGroup">
+            <button data-model="Caçador" data-icon="fa-person-rifle" class="model-btn hud bg-surface border border-line hover:border-purple/60 py-4 flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-person-rifle text-purple text-xl"></i><span class="font-mono text-[10px]">Caçador</span>
+            </button>
+            <button data-model="Dragão" data-icon="fa-dragon" class="model-btn hud bg-surface border border-line hover:border-purple/60 py-4 flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-dragon text-purple text-xl"></i><span class="font-mono text-[10px]">Dragão</span>
+            </button>
+            <button data-model="Mecha" data-icon="fa-robot" class="model-btn hud bg-surface border border-line hover:border-purple/60 py-4 flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-robot text-purple text-xl"></i><span class="font-mono text-[10px]">Mecha</span>
+            </button>
+            <button data-model="Arcanista" data-icon="fa-hat-wizard" class="model-btn hud bg-surface border border-line hover:border-purple/60 py-4 flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-hat-wizard text-purple text-xl"></i><span class="font-mono text-[10px]">Arcanista</span>
+            </button>
+            <button data-model="Personalizado" data-icon="fa-cube" class="model-btn hud bg-surface border border-line hover:border-purple/60 py-4 flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-cube text-purple text-xl"></i><span class="font-mono text-[10px]">Seu STL</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p class="font-mono text-xs text-muted mb-3">ETAPA 2 — ESCOLHA O MATERIAL</p>
+          <div class="grid grid-cols-2 gap-3" id="materialGroup">
+            <button data-material="Resina 8K" data-mult="1.4" class="mat-btn hud bg-surface border border-line hover:border-purple/60 py-4 text-left px-4 transition">
+              <span class="font-display font-semibold text-sm block">Resina 8K</span>
+              <span class="font-mono text-[10px] text-muted">acabamento ultra detalhado</span>
+            </button>
+            <button data-material="PLA" data-mult="1" class="mat-btn hud bg-surface border border-line hover:border-purple/60 py-4 text-left px-4 transition">
+              <span class="font-display font-semibold text-sm block">PLA</span>
+              <span class="font-mono text-[10px] text-muted">resistente e mais em conta</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p class="font-mono text-xs text-muted mb-3">ETAPA 3 — ESCOLHA O TAMANHO</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="sizeGroup">
+            <button data-size="10 cm" data-base="89.9" class="size-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">10 cm</button>
+            <button data-size="15 cm" data-base="129.9" class="size-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">15 cm</button>
+            <button data-size="20 cm" data-base="189.9" class="size-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">20 cm</button>
+            <button data-size="30 cm" data-base="289.9" class="size-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">30 cm</button>
+          </div>
+        </div>
+
+        <div>
+          <p class="font-mono text-xs text-muted mb-3">ETAPA 4 — ESCOLHA O ACABAMENTO</p>
+          <div class="grid grid-cols-3 gap-3" id="finishGroup">
+            <button data-finish="Sem pintura" data-add="0" class="fin-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">Sem pintura</button>
+            <button data-finish="Pintura básica" data-add="40" class="fin-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">Básica</button>
+            <button data-finish="Pintura premium" data-add="110" class="fin-btn hud bg-surface border border-line hover:border-purple/60 py-3 font-mono text-xs transition">Premium</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- live preview / estimate -->
+      <div class="hud bg-surface border border-line p-6 lg:sticky lg:top-24">
+        <div class="aspect-square bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center mb-5 relative overflow-hidden">
+          <i id="previewIcon" class="fa-solid fa-cube text-7xl text-purple/80 transition-all duration-300"></i>
+          <div class="bust-scan opacity-60"></div>
+        </div>
+        <dl class="space-y-2 font-mono text-xs text-muted mb-5">
+          <div class="flex justify-between"><dt>MODELO</dt><dd id="outModel" class="text-ink">—</dd></div>
+          <div class="flex justify-between"><dt>MATERIAL</dt><dd id="outMaterial" class="text-ink">—</dd></div>
+          <div class="flex justify-between"><dt>TAMANHO</dt><dd id="outSize" class="text-ink">—</dd></div>
+          <div class="flex justify-between"><dt>ACABAMENTO</dt><dd id="outFinish" class="text-ink">—</dd></div>
+        </dl>
+        <div class="border-t border-line pt-4">
+          <p class="font-mono text-[10px] text-muted mb-1">ESTIMATIVA</p>
+          <p class="font-display font-bold text-3xl mb-4">R$ <span id="outPrice">0,00</span></p>
+          <button id="btnFinalizarPedido" class="w-full btn-primary rounded-full py-3.5 font-semibold text-sm text-white">Ir para pagamento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- mobile-only sticky estimate bar, shown while the configurador is in view -->
+<div id="mobileEstimateBar" class="lg:hidden">
+  <div class="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
+    <div class="font-mono text-[11px] leading-tight">
+      <span class="text-muted block">ESTIMATIVA</span>
+      <span class="font-display font-bold text-lg">R$ <span id="outPriceMobile">0,00</span></span>
+    </div>
+    <a href="#configurador" class="btn-primary rounded-full px-5 py-2.5 font-semibold text-xs text-white shrink-0">Ir para pagamento</a>
+  </div>
+</div>
+
+<!-- ============ UPLOAD MODELO 3D ============ -->
+<section class="py-14 md:py-28 border-b border-line grid-bg">
+  <div class="max-w-4xl mx-auto px-5 md:px-8 text-center">
+    <h2 class="font-display font-bold text-3xl md:text-4xl">Tem um modelo 3D?</h2>
+    <p class="font-display font-bold text-3xl md:text-4xl text-purple mb-6">Mande para a gente.</p>
+    <p class="text-muted max-w-md mx-auto mb-10">Envie seu modelo — nossa equipe analisa o arquivo e retorna com uma estimativa de impressão.</p>
+
+    <div id="dropzone" class="hud border-2 border-dashed border-line rounded-2xl py-14 px-6 transition-all">
+      <i class="fa-solid fa-cloud-arrow-up text-4xl text-purple mb-4"></i>
+      <p class="font-mono text-sm mb-1" id="dzLabel">Arraste seu arquivo aqui</p>
+      <p class="font-mono text-[11px] text-muted mb-6">STL · OBJ · 3MF</p>
+      <input type="file" id="fileInput" accept=".stl,.obj,.3mf" class="hidden">
+      <button onclick="document.getElementById('fileInput').click()" class="btn-primary rounded-full px-7 py-3 font-semibold text-sm text-white">Enviar meu modelo</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DO ARQUIVO PARA A ESTANTE ============ -->
+<section class="py-14 md:py-28 border-b border-line">
+  <div class="max-w-5xl mx-auto px-5 md:px-8">
+    <h2 class="font-display font-bold text-3xl md:text-4xl text-center mb-3">Do arquivo → para a estante</h2>
+    <p class="text-muted text-center mb-12">Arraste o controle para comparar</p>
+
+    <div class="relative aspect-video hud overflow-hidden select-none" id="compareWrap">
+      <div class="absolute inset-0 bg-gradient-to-br from-[#171227] to-[#0C0910] flex items-center justify-center">
+        <div class="text-center">
+          <i class="fa-solid fa-diagram-project text-6xl text-purple/70 mb-3"></i>
+          <p class="font-mono text-xs text-muted">MODELO 3D DIGITAL</p>
+        </div>
+      </div>
+      <div class="absolute inset-0 overflow-hidden" id="afterLayer" style="width:50%;">
+        <div class="h-full flex items-center justify-center bg-gradient-to-br from-[#3B2A63] to-[#1A1224]" style="width:200%; max-width:none;">
+          <div class="text-center" style="width:50%;">
+            <i class="fa-solid fa-trophy text-6xl text-neon mb-3"></i>
+            <p class="font-mono text-xs text-ink">PEÇA FÍSICA FINALIZADA</p>
+          </div>
+        </div>
+      </div>
+      <div class="absolute top-0 bottom-0 w-0.5 bg-ink/80 pointer-events-none" id="compareHandleLine" style="left:50%;"></div>
+      <input type="range" min="0" max="100" value="50" class="compare-slider" id="compareRange" aria-label="Comparar antes e depois">
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROCESSO DE FABRICAÇÃO ============ -->
+<section id="processo" class="py-14 md:py-28 border-b border-line grid-bg-fine">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <p class="font-mono text-xs text-purple mb-2">DO CAD À ESTANTE</p>
+    <h2 class="font-display font-bold text-3xl md:text-4xl mb-12">Por trás da impressão</h2>
+
+    <div class="grid md:grid-cols-2 gap-10 items-start">
+      <div class="space-y-1" id="stepsList">
+        <button data-step="1" class="step-btn w-full text-left flex items-center gap-4 py-4 border-b border-line group" onclick="setStep(1)">
+          <span class="font-mono text-xs text-purple w-8">01</span>
+          <span class="font-display font-medium group-[.active]:text-purple">Modelagem</span>
+        </button>
+        <button data-step="2" class="step-btn w-full text-left flex items-center gap-4 py-4 border-b border-line group" onclick="setStep(2)">
+          <span class="font-mono text-xs text-purple w-8">02</span>
+          <span class="font-display font-medium">Impressão</span>
+        </button>
+        <button data-step="3" class="step-btn w-full text-left flex items-center gap-4 py-4 border-b border-line group" onclick="setStep(3)">
+          <span class="font-mono text-xs text-purple w-8">03</span>
+          <span class="font-display font-medium">Remoção de suportes</span>
+        </button>
+        <button data-step="4" class="step-btn w-full text-left flex items-center gap-4 py-4 border-b border-line group" onclick="setStep(4)">
+          <span class="font-mono text-xs text-purple w-8">04</span>
+          <span class="font-display font-medium">Acabamento</span>
+        </button>
+        <button data-step="5" class="step-btn w-full text-left flex items-center gap-4 py-4 border-b border-line group" onclick="setStep(5)">
+          <span class="font-mono text-xs text-purple w-8">05</span>
+          <span class="font-display font-medium">Pintura</span>
+        </button>
+        <button data-step="6" class="step-btn w-full text-left flex items-center gap-4 py-4 group" onclick="setStep(6)">
+          <span class="font-mono text-xs text-purple w-8">06</span>
+          <span class="font-display font-medium">Sua estante</span>
+        </button>
+      </div>
+
+      <div class="hud bg-surface border border-line p-8 aspect-[4/3] flex flex-col justify-between">
+        <i id="stepIcon" class="fa-solid fa-pen-ruler text-5xl text-purple"></i>
+        <div>
+          <p class="font-mono text-xs text-muted mb-2" id="stepTag">ETAPA 01</p>
+          <h3 class="font-display font-semibold text-xl mb-2" id="stepTitle">Modelagem</h3>
+          <p class="text-muted text-sm leading-relaxed" id="stepDesc">Seu personagem é esculpido digitalmente, poligono a poligono, até chegar na pose e nos detalhes certos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ESTANTE DA COMUNIDADE ============ -->
+<section id="estante" class="py-14 md:py-28 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <h2 class="font-display font-bold text-3xl md:text-4xl mb-2">A estante da comunidade</h2>
+    <p class="text-muted mb-12">Peças reais, nas estantes de clientes reais.</p>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="galleryGrid">
+      <!-- items injected identical structure, 8 items -->
+    </div>
+  </div>
+</section>
+
+<!-- gallery modal -->
+<div id="galleryModal" class="hidden fixed inset-0 z-50 bg-bg/90 backdrop-blur items-center justify-center px-5" role="dialog" aria-modal="true">
+  <div class="hud bg-surface border border-line max-w-md w-full p-6 relative">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-muted hover:text-purple" aria-label="Fechar"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div class="aspect-square bg-gradient-to-br from-[#2A1F42] to-[#120E1B] flex items-center justify-center mb-5">
+      <i id="modalIcon" class="fa-solid fa-cube text-6xl text-purple"></i>
+    </div>
+    <h3 id="modalName" class="font-display font-semibold text-xl mb-3"></h3>
+    <dl class="grid grid-cols-2 gap-y-2 font-mono text-xs text-muted">
+      <dt>Material</dt><dd id="modalMaterial" class="text-ink text-right"></dd>
+      <dt>Tamanho</dt><dd id="modalSize" class="text-ink text-right"></dd>
+      <dt>Acabamento</dt><dd id="modalFinish" class="text-ink text-right"></dd>
+    </dl>
+  </div>
+</div>
+
+<!-- ============ GAMIFICAÇÃO ============ -->
+<section class="py-14 md:py-28 border-b border-line grid-bg-fine">
+  <div class="max-w-3xl mx-auto px-5 md:px-8">
+    <div class="hud bg-surface border border-line p-8">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <p class="font-mono text-xs text-muted">SUA COLEÇÃO</p>
+          <h3 class="font-display font-bold text-2xl">Nível 07 — Colecionador</h3>
+        </div>
+        <i class="fa-solid fa-medal text-3xl text-purple"></i>
+      </div>
+
+      <div class="h-2.5 w-full bg-steel/40 rounded-full overflow-hidden mb-2">
+        <div class="prog-bar h-full rounded-full" style="width:64%"></div>
+      </div>
+      <p class="font-mono text-[11px] text-muted mb-8">64% até o próximo nível</p>
+
+      <div class="grid grid-cols-2 gap-6 mb-8">
+        <div>
+          <p class="font-display font-bold text-3xl">06</p>
+          <p class="font-mono text-[11px] text-muted">peças adquiridas</p>
+        </div>
+        <div>
+          <p class="font-display font-bold text-3xl">04</p>
+          <p class="font-mono text-[11px] text-muted">universos desbloqueados</p>
+        </div>
+      </div>
+
+      <div class="border-t border-line pt-5">
+        <p class="font-mono text-[11px] text-purple mb-1">PRÓXIMA CONQUISTA</p>
+        <p class="font-display font-medium">"Caçador de relíquias" — adquira 10 peças para desbloquear.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROVA SOCIAL ============ -->
+<section class="py-14 md:py-28 border-b border-line">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="flex items-end justify-between gap-6 mb-12 flex-wrap">
+      <h2 class="font-display font-bold text-3xl md:text-4xl max-w-md">Não acredite só na gente.</h2>
+      <a href="#estante" class="font-mono text-xs text-muted hover:text-purple border-b border-transparent hover:border-purple transition">VER GALERIA DOS CLIENTES</a>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+      <div class="hud bg-surface border border-line p-6">
+        <div class="text-purple text-sm mb-3">★★★★★</div>
+        <p class="text-ink/90 mb-4">A pintura ficou muito melhor do que eu esperava. Parece saída direto do jogo.</p>
+        <p class="font-mono text-xs text-muted">— Rafael M.</p>
+      </div>
+      <div class="hud bg-surface border border-line p-6">
+        <div class="text-purple text-sm mb-3">★★★★★</div>
+        <p class="text-ink/90 mb-4">Mandei meu próprio STL e o acabamento em resina 8K ficou impecável, todos os detalhes.</p>
+        <p class="font-mono text-xs text-muted">— Camila T.</p>
+      </div>
+      <div class="hud bg-surface border border-line p-6">
+        <div class="text-purple text-sm mb-3">★★★★★</div>
+        <p class="text-ink/90 mb-4">Chegou embalado com muito cuidado e no prazo combinado. Já virou vício comprar aqui.</p>
+        <p class="font-mono text-xs text-muted">— Diego A.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6 font-mono text-center border-t border-line pt-8">
+      <div><p class="font-display font-bold text-2xl md:text-3xl">1.200+</p><p class="text-[11px] text-muted mt-1">peças produzidas</p></div>
+      <div><p class="font-display font-bold text-2xl md:text-3xl">4.9/5</p><p class="text-[11px] text-muted mt-1">nota média</p></div>
+      <div><p class="font-display font-bold text-2xl md:text-3xl">100%</p><p class="text-[11px] text-muted mt-1">Brasil</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="py-14 md:py-28 border-b border-line grid-bg-fine">
+  <div class="max-w-3xl mx-auto px-5 md:px-8">
+    <h2 class="font-display font-bold text-3xl md:text-4xl mb-10">Perguntas frequentes</h2>
+
+    <div class="divide-y divide-line border-t border-b border-line">
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Quanto tempo demora para produzir?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Entre 5 e 12 dias úteis, dependendo do tamanho, material e fila de produção da semana.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Vocês enviam para todo o Brasil?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Sim, enviamos para todo o território nacional com embalagem reforçada para peças frágeis.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Posso enviar meu próprio STL?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Pode sim. Use a área de upload nesta página — nossa equipe analisa o arquivo e retorna com uma estimativa.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Vocês fazem pintura?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Sim, oferecemos acabamento sem pintura, pintura básica e pintura premium feita à mão.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Qual a diferença entre PLA e resina?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">PLA é mais resistente a impactos e custa menos. A resina 8K captura muito mais detalhe, ideal para bustos e peças finas.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Posso escolher o tamanho?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Sim, de 10 a 30 cm no configurador. Tamanhos maiores sob consulta.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Vocês fazem modelos personalizados?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Sim — a partir de referências, arte conceitual ou de um arquivo 3D que você já tenha.</p>
+      </details>
+      <details class="faq py-5 group">
+        <summary class="flex items-center justify-between gap-4">
+          <span class="font-display font-medium">Como funciona o orçamento?</span>
+          <i class="fa-solid fa-plus faq-chevron text-purple"></i>
+        </summary>
+        <p class="text-muted text-sm mt-3 leading-relaxed">Use o configurador para uma estimativa imediata ou fale com a gente pelo WhatsApp para um projeto sob medida.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="py-16 md:py-32 border-b border-line relative overflow-hidden grid-bg">
+  <div class="max-w-3xl mx-auto px-5 md:px-8 text-center relative z-10">
+    <h2 class="font-display font-bold text-4xl md:text-5xl mb-4">Pronto para sua próxima missão?</h2>
+    <p class="text-muted mb-10 max-w-md mx-auto">Escolha sua peça, envie seu modelo ou crie algo completamente seu.</p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="#drops" class="btn-primary rounded-full px-8 py-4 font-semibold text-sm text-white">Explorar coleção</a>
+      <a href="#configurador" class="btn-outline rounded-full px-8 py-4 font-semibold text-sm">Começar meu projeto</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="py-12">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full border border-purple/60 flex items-center justify-center">
+        <i class="fa-solid fa-cube text-purple text-xs"></i>
+      </span>
+      <span class="font-display font-bold">Sahir <span class="text-purple">3D</span></span>
+    </div>
+    <p class="text-sm text-muted font-mono">© 2026 · impresso sob demanda, peça a peça</p>
+    <div class="flex gap-4 text-ink/70">
+      <a href="#" class="hover:text-purple transition-colors" aria-label="Instagram"><i class="fa-brands fa-instagram text-lg"></i></a>
+      <a href="#" class="hover:text-purple transition-colors" aria-label="TikTok"><i class="fa-brands fa-tiktok text-lg"></i></a>
+      <a href="https://wa.me/5500000000000" class="hover:text-purple transition-colors" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ MODAL DE CHECKOUT (nome/e-mail antes de ir pro pagamento) ============ -->
+<div id="checkoutModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/70 p-4">
+  <div class="hud bg-surface border border-line p-6 w-full max-w-sm relative">
+    <button type="button" onclick="document.getElementById('checkoutModal').classList.add('hidden'); document.getElementById('checkoutModal').classList.remove('flex');"
+      class="absolute top-4 right-4 text-muted hover:text-ink transition" aria-label="Fechar">
+      <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
+    <h3 class="font-display font-bold text-lg mb-1">Finalizar pedido</h3>
+    <p class="text-muted text-xs mb-5">Precisamos do seu nome e e-mail para gerar o link de pagamento.</p>
+    <form id="checkoutForm" class="space-y-4">
+      <div>
+        <label for="checkoutNome" class="block font-mono text-[10px] text-muted mb-1.5">NOME COMPLETO</label>
+        <input id="checkoutNome" type="text" required
+          class="w-full bg-surface2 border border-line focus:border-purple/60 outline-none rounded-lg px-3.5 py-2.5 text-sm text-ink transition" />
+      </div>
+      <div>
+        <label for="checkoutEmail" class="block font-mono text-[10px] text-muted mb-1.5">E-MAIL</label>
+        <input id="checkoutEmail" type="email" required
+          class="w-full bg-surface2 border border-line focus:border-purple/60 outline-none rounded-lg px-3.5 py-2.5 text-sm text-ink transition" />
+      </div>
+      <p id="checkoutError" class="hidden text-red-400 text-xs"></p>
+      <button type="submit" class="w-full btn-primary rounded-full py-3 font-semibold text-sm text-white">Ir para pagamento</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- mobile menu ---------- */
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const menuIcon = document.getElementById('menuIcon');
+  menuToggle.addEventListener('click', () => {
+    const isHidden = mobileMenu.classList.toggle('hidden');
+    menuToggle.setAttribute('aria-expanded', String(!isHidden));
+    menuIcon.className = isHidden ? 'fa-solid fa-bars text-lg' : 'fa-solid fa-xmark text-lg';
+  });
+  mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    mobileMenu.classList.add('hidden');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuIcon.className = 'fa-solid fa-bars text-lg';
+  }));
+
+  /* ---------- hero 3D model ---------- */
+  /* the <model-viewer> element (added via CDN script in <head>) already handles
+     drag-to-orbit, pinch-zoom and touch gestures natively — no custom JS needed. */
+
+  /* ---------- add to inventory feedback ---------- */
+  let inventoryCount = 2;
+  function addToInventory(btn) {
+    const span = btn.querySelector('span');
+    const original = span.textContent;
+    span.textContent = 'ADICIONADO ✓';
+    btn.classList.add('bg-purple','text-white');
+    setTimeout(() => {
+      span.textContent = original;
+      btn.classList.remove('bg-purple','text-white');
+    }, 1400);
+    inventoryCount++;
+    document.querySelectorAll('[aria-label^="Abrir inventário"]').forEach(b => {
+      b.setAttribute('aria-label', `Abrir inventário, ${inventoryCount} itens`);
+      const badge = b.querySelector('span');
+      if (badge) badge.textContent = inventoryCount;
+    });
+  }
+
+  /* ---------- configurador ---------- */
+  const state = { model: null, modelIcon: 'fa-cube', material: null, mult: 1, size: null, base: 0, finish: null, add: 0 };
+
+  function selectGroup(groupId, btnClass, cb) {
+    document.querySelectorAll('#' + groupId + ' .' + btnClass).forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#' + groupId + ' .' + btnClass).forEach(b => b.classList.remove('border-purple','bg-surface2'));
+        btn.classList.add('border-purple','bg-surface2');
+        cb(btn);
+        updateEstimate();
+      });
+    });
+  }
+
+  selectGroup('modelGroup', 'model-btn', (btn) => {
+    state.model = btn.dataset.model; state.modelIcon = btn.dataset.icon;
+  });
+  selectGroup('materialGroup', 'mat-btn', (btn) => {
+    state.material = btn.dataset.material; state.mult = parseFloat(btn.dataset.mult);
+  });
+  selectGroup('sizeGroup', 'size-btn', (btn) => {
+    state.size = btn.dataset.size; state.base = parseFloat(btn.dataset.base);
+  });
+  selectGroup('finishGroup', 'fin-btn', (btn) => {
+    state.finish = btn.dataset.finish; state.add = parseFloat(btn.dataset.add);
+  });
+
+  function updateEstimate() {
+    document.getElementById('outModel').textContent = state.model || '—';
+    document.getElementById('outMaterial').textContent = state.material || '—';
+    document.getElementById('outSize').textContent = state.size || '—';
+    document.getElementById('outFinish').textContent = state.finish || '—';
+    const icon = document.getElementById('previewIcon');
+    icon.className = 'fa-solid ' + state.modelIcon + ' text-7xl text-purple/80 transition-all duration-300';
+
+    if (state.base && state.mult) {
+      const price = state.base * state.mult + (state.add || 0);
+      const formatted = price.toFixed(2).replace('.', ',');
+      document.getElementById('outPrice').textContent = formatted;
+      document.getElementById('outPriceMobile').textContent = formatted;
+    } else {
+      document.getElementById('outPrice').textContent = '0,00';
+      document.getElementById('outPriceMobile').textContent = '0,00';
+    }
+  }
+
+  /* ---------- mobile sticky estimate bar: show while configurador is in view ---------- */
+  const estimateBar = document.getElementById('mobileEstimateBar');
+  const whatsappFloat = document.getElementById('whatsappFloat');
+  const configuradorSection = document.getElementById('configurador');
+  if ('IntersectionObserver' in window) {
+    const configObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        estimateBar.classList.toggle('visible', entry.isIntersecting);
+        if (window.innerWidth < 1024) {
+          whatsappFloat.style.transform = entry.isIntersecting ? 'translateY(-64px)' : 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.15 });
+    configObserver.observe(configuradorSection);
+  }
+
+  /* ---------- upload drag & drop ---------- */
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const dzLabel = document.getElementById('dzLabel');
+  ['dragenter','dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault(); dropzone.classList.add('drag-active');
+  }));
+  ['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault(); dropzone.classList.remove('drag-active');
+  }));
+  dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) dzLabel.textContent = 'Arquivo recebido: ' + file.name;
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) dzLabel.textContent = 'Arquivo recebido: ' + fileInput.files[0].name;
+  });
+
+  /* ---------- before/after slider ---------- */
+  const compareRange = document.getElementById('compareRange');
+  const afterLayer = document.getElementById('afterLayer');
+  const handleLine = document.getElementById('compareHandleLine');
+  compareRange.addEventListener('input', () => {
+    const v = compareRange.value;
+    afterLayer.style.width = v + '%';
+    handleLine.style.left = v + '%';
+  });
+
+  /* ---------- fabrication steps ---------- */
+  const stepData = {
+    1: { icon:'fa-pen-ruler', title:'Modelagem', desc:'Seu personagem é esculpido digitalmente, polígono a polígono, até chegar na pose e nos detalhes certos.' },
+    2: { icon:'fa-print', title:'Impressão', desc:'O arquivo vai para a impressora certa — resina 8K ou PLA — camada por camada, com o suporte ideal para cada peça.' },
+    3: { icon:'fa-hand-sparkles', title:'Remoção de suportes', desc:'As estruturas de apoio são removidas com cuidado, uma a uma, sem marcar a superfície da peça.' },
+    4: { icon:'fa-fill-drip', title:'Acabamento', desc:'Lixamos, selamos e corrigimos qualquer imperfeição até a superfície ficar pronta para pintura.' },
+    5: { icon:'fa-paintbrush', title:'Pintura', desc:'Cores, camadas e sombreamento aplicados à mão, camada por camada, para dar vida ao personagem.' },
+    6: { icon:'fa-house', title:'Sua estante', desc:'Embalagem reforçada, conferência final e a peça segue para o seu endereço, pronta para exibir.' },
+  };
+  function setStep(n) {
+    document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.step-btn[data-step="'+n+'"]').classList.add('active');
+    document.querySelectorAll('.step-btn span:last-child').forEach(s => s.classList.remove('text-purple'));
+    document.querySelector('.step-btn[data-step="'+n+'"] span:last-child').classList.add('text-purple');
+    const d = stepData[n];
+    document.getElementById('stepIcon').className = 'fa-solid ' + d.icon + ' text-5xl text-purple';
+    document.getElementById('stepTag').textContent = 'ETAPA 0' + n;
+    document.getElementById('stepTitle').textContent = d.title;
+    document.getElementById('stepDesc').textContent = d.desc;
+  }
+  setStep(1);
+
+  /* ---------- community gallery ---------- */
+  const galleryItems = [
+    { icon:'fa-person-rifle', name:'Sentinela Noturna', material:'Resina 8K', size:'18 cm', finish:'Pintura premium' },
+    { icon:'fa-dragon', name:'Wyrm de Obsidiana', material:'Resina 8K', size:'24 cm', finish:'Pintura manual' },
+    { icon:'fa-robot', name:'Mecha VK-09', material:'PLA', size:'20 cm', finish:'Pintura básica' },
+    { icon:'fa-hat-wizard', name:'Feiticeira do Véu', material:'Resina 8K', size:'16 cm', finish:'Pintura premium' },
+    { icon:'fa-shield-halved', name:'Guardião de Aço', material:'PLA', size:'22 cm', finish:'Pintura básica' },
+    { icon:'fa-skull', name:'Arauto da Névoa', material:'Resina 8K', size:'15 cm', finish:'Sem pintura' },
+    { icon:'fa-dice-d20', name:'Mestre das Runas', material:'Resina 8K', size:'19 cm', finish:'Pintura premium' },
+    { icon:'fa-rocket', name:'Frota Vanguarda', material:'PLA', size:'25 cm', finish:'Pintura básica' },
+  ];
+  const galleryGrid = document.getElementById('galleryGrid');
+  galleryItems.forEach((item, i) => {
+    const el = document.createElement('button');
+    el.className = 'hud bg-surface border border-line aspect-square flex items-center justify-center group overflow-hidden relative';
+    el.innerHTML = `<i class="fa-solid ${item.icon} text-3xl text-purple/80 group-hover:scale-110 transition-transform"></i>`;
+    el.addEventListener('click', () => openModal(item));
+    galleryGrid.appendChild(el);
+  });
+
+  const modal = document.getElementById('galleryModal');
+  function openModal(item) {
+    document.getElementById('modalIcon').className = 'fa-solid ' + item.icon + ' text-6xl text-purple';
+    document.getElementById('modalName').textContent = item.name;
+    document.getElementById('modalMaterial').textContent = item.material;
+    document.getElementById('modalSize').textContent = item.size;
+    document.getElementById('modalFinish').textContent = item.finish;
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+  }
+  function closeModal() {
+    modal.classList.add('hidden'); modal.classList.remove('flex');
+  }
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  /* ---------- checkout: envia o pedido pro backend e redireciona pro Mercado Pago ---------- */
+
+  // Troque pela URL real do seu backend depois do deploy.
+  const BACKEND_URL = 'https://sahir3d-backend.onrender.com';
+
+  const checkoutModal = document.getElementById('checkoutModal');
+  const checkoutForm = document.getElementById('checkoutForm');
+  const checkoutError = document.getElementById('checkoutError');
+  const btnFinalizarPedido = document.getElementById('btnFinalizarPedido');
+
+  function abrirCheckoutModal() {
+    if (!state.model || !state.material || !state.size) {
+      alert('Escolha o modelo, o material e o tamanho antes de continuar.');
+      return;
+    }
+    checkoutError.classList.add('hidden');
+    checkoutModal.classList.remove('hidden');
+    checkoutModal.classList.add('flex');
+  }
+
+  function fecharCheckoutModal() {
+    checkoutModal.classList.add('hidden');
+    checkoutModal.classList.remove('flex');
+  }
+
+  if (btnFinalizarPedido) {
+    btnFinalizarPedido.addEventListener('click', abrirCheckoutModal);
+  }
+
+  checkoutModal.addEventListener('click', (e) => { if (e.target === checkoutModal) fecharCheckoutModal(); });
+
+  checkoutForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    checkoutError.classList.add('hidden');
+
+    const nome = document.getElementById('checkoutNome').value.trim();
+    const email = document.getElementById('checkoutEmail').value.trim();
+    if (!nome || !email) return;
+
+    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+    const submitBtnOriginalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Gerando pagamento...';
+
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/pedidos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modelo: state.model,
+          material: state.material,
+          tamanho: state.size,
+          acabamento: state.finish || 'Sem pintura',
+          cliente: { nome, email },
+        }),
+      });
+
+      if (!resp.ok) throw new Error('Falha ao criar pedido');
+
+      const { linkPagamento } = await resp.json();
+      window.location.href = linkPagamento; // manda o cliente pro checkout do Mercado Pago
+    } catch (erro) {
+      checkoutError.textContent = 'Não foi possível iniciar o pagamento. Tente novamente em instantes.';
+      checkoutError.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtnOriginalText;
+    }
+  });
+</script>
+</body>
+</html>
