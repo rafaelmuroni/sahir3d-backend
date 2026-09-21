@@ -1,33 +1,54 @@
-// Banco de dados simples em arquivo, só para você sair rodando rápido.
-// Quando o site começar a vender de verdade, troque por Postgres (Supabase,
-// Neon, Railway) — a interface abaixo (getPedidos/salvarPedido/etc.) pode
-// continuar igual, só troca o que tem dentro dessas funções.
+// Conexão com o banco de dados Postgres do Supabase.
+// Usa a service_role key, que ignora as regras de segurança (RLS) —
+// por isso essa chave só pode existir aqui no backend, nunca no front-end.
 
-import { JSONFilePreset } from "lowdb/node";
+import { createClient } from "@supabase/supabase-js";
 
-const defaultData = { pedidos: [] };
-const db = await JSONFilePreset("data/db.json", defaultData);
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error(
+    "SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidos. Configure essas variáveis no .env (ou nas Environment Variables do Render)."
+  );
+}
+
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export async function criarPedido(pedido) {
-  db.data.pedidos.push(pedido);
-  await db.write();
-  return pedido;
+  const { data, error } = await supabase.from("pedidos").insert(pedido).select().single();
+  if (error) throw error;
+  return data;
 }
 
 export async function buscarPedidoPorId(id) {
-  return db.data.pedidos.find((p) => p.id === id);
+  const { data, error } = await supabase.from("pedidos").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
-export async function atualizarStatusPedido(id, status, detalhesPagamento = {}) {
-  const pedido = db.data.pedidos.find((p) => p.id === id);
-  if (!pedido) return null;
-  pedido.status = status;
-  pedido.pagamento = { ...pedido.pagamento, ...detalhesPagamento };
-  pedido.atualizadoEm = new Date().toISOString();
-  await db.write();
-  return pedido;
+export async function atualizarStatusPedido(id, status, detalhes = {}) {
+  const { data, error } = await supabase
+    .from("pedidos")
+    .update({
+      status,
+      mercadopago_payment_id: detalhes.mercadopagoPaymentId,
+      status_detail: detalhes.statusDetail,
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
-export async function listarPedidos() {
-  return db.data.pedidos;
+export async function listarPedidosPorUsuario(userId) {
+  const { data, error } = await supabase
+    .from("pedidos")
+    .select("*")
+    .eq("user_id", userId)
+    .order("criado_em", { ascending: false });
+  if (error) throw error;
+  return data;
 }
