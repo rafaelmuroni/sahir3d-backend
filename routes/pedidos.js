@@ -50,11 +50,11 @@ pedidosRouter.post("/", async (req, res) => {
           },
         ],
         external_reference: pedidoId,
-        back_urls: {
-          success: 'https://rafaelmuroni.github.io/sahir3d-site/?status=sucesso',
-          failure: 'https://rafaelmuroni.github.io/sahir3d-site/?status=falha',
-          pending: 'https://rafaelmuroni.github.io/sahir3d-site/?status=pendente',
-        },
+     back_urls: {
+  success: `https://rafaelmuroni.github.io/sahir3d-site/?status=sucesso&pedido=${pedidoId}`,
+  failure: `https://rafaelmuroni.github.io/sahir3d-site/?status=falha&pedido=${pedidoId}`,
+  pending: `https://rafaelmuroni.github.io/sahir3d-site/?status=pendente&pedido=${pedidoId}`,
+},
         auto_return: 'approved',
         notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
       },
