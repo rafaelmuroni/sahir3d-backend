@@ -3,9 +3,28 @@ import { nanoid } from "nanoid";
 import { Preference, Payment } from "mercadopago";
 import { mpClient } from "../config/mercadopago.js";
 import { calcularPreco, TAMANHOS, MATERIAIS, ACABAMENTOS } from "../utils/precos.js";
-import { criarPedido, buscarPedidoPorId, atualizarStatusPedido } from "../config/db.js";
+import {
+  supabase,
+  criarPedido,
+  buscarPedidoPorId,
+  atualizarStatusPedido,
+  listarPedidosPorUsuario,
+} from "../config/db.js";
 
 export const pedidosRouter = Router();
+
+// Lê o token do Supabase enviado pelo front-end (se o cliente estiver logado)
+// e devolve o ID do usuário autenticado, ou null se não estiver logado.
+// Nunca confie em um user_id enviado direto pelo corpo da requisição — sempre
+// valide o token, senão qualquer pessoa poderia se passar por outro usuário.
+async function pegarUsuarioLogado(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) return null;
+  return data.user.id;
+}
 
 // POST /api/pedidos
 // Recebe as escolhas do configurador, recalcula o preço no servidor,
@@ -23,17 +42,19 @@ pedidosRouter.post("/", async (req, res) => {
 
     const preco = calcularPreco({ tamanho, material, acabamento });
     const pedidoId = nanoid(12);
+    const userId = await pegarUsuarioLogado(req); // null se o cliente não estiver logado (checkout como convidado)
 
     await criarPedido({
       id: pedidoId,
+      user_id: userId,
       modelo,
       material,
       tamanho,
       acabamento,
       preco,
-      cliente,
+      cliente_nome: cliente.nome,
+      cliente_email: cliente.email,
       status: "pendente",
-      criadoEm: new Date().toISOString(),
     });
 
     const preference = new Preference(mpClient);
@@ -50,12 +71,12 @@ pedidosRouter.post("/", async (req, res) => {
           },
         ],
         external_reference: pedidoId,
-     back_urls: {
-  success: `https://rafaelmuroni.github.io/sahir3d-site/?status=sucesso&pedido=${pedidoId}`,
-  failure: `https://rafaelmuroni.github.io/sahir3d-site/?status=falha&pedido=${pedidoId}`,
-  pending: `https://rafaelmuroni.github.io/sahir3d-site/?status=pendente&pedido=${pedidoId}`,
-},
-        auto_return: 'approved',
+        back_urls: {
+          success: `https://rafaelmuroni.github.io/sahir3d-site/?status=sucesso&pedido=${pedidoId}`,
+          failure: `https://rafaelmuroni.github.io/sahir3d-site/?status=falha&pedido=${pedidoId}`,
+          pending: `https://rafaelmuroni.github.io/sahir3d-site/?status=pendente&pedido=${pedidoId}`,
+        },
+        auto_return: "approved",
         notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
       },
     });
@@ -68,6 +89,23 @@ pedidosRouter.post("/", async (req, res) => {
   } catch (erro) {
     console.error("Erro ao criar pedido:", erro);
     res.status(500).json({ erro: "Não foi possível criar o pedido. Tente novamente." });
+  }
+});
+
+// GET /api/pedidos/meus
+// Lista os pedidos do usuário logado. Exige token válido do Supabase.
+// IMPORTANTE: essa rota tem que vir ANTES de "/:id" abaixo, senão o Express
+// vai achar que "meus" é um ID de pedido.
+pedidosRouter.get("/meus", async (req, res) => {
+  const userId = await pegarUsuarioLogado(req);
+  if (!userId) return res.status(401).json({ erro: "Faça login para ver seus pedidos." });
+
+  try {
+    const pedidos = await listarPedidosPorUsuario(userId);
+    res.json(pedidos);
+  } catch (erro) {
+    console.error("Erro ao listar pedidos do usuário:", erro);
+    res.status(500).json({ erro: "Não foi possível carregar seus pedidos." });
   }
 });
 
@@ -100,6 +138,8 @@ webhookRouter.post("/mercadopago", async (req, res) => {
     const pedidoId = pagamento.external_reference;
     if (!pedidoId) return;
 
+    console.log(`Webhook recebido do Mercado Pago: payment ${data.id}, status ${pagamento.status}`);
+
     const statusMap = {
       approved: "pago",
       pending: "pendente",
@@ -108,8 +148,6 @@ webhookRouter.post("/mercadopago", async (req, res) => {
       cancelled: "cancelado",
       refunded: "reembolsado",
     };
-
-      console.log(`Webhook recebido do Mercado Pago: payment ${data.id}, status ${pagamento.status}`);
 
     const novoStatus = statusMap[pagamento.status] || pagamento.status;
 
