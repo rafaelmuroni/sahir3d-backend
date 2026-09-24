@@ -2,7 +2,7 @@ import { Router } from "express";
 import { nanoid } from "nanoid";
 import { Preference, Payment } from "mercadopago";
 import { mpClient } from "../config/mercadopago.js";
-import { calcularPreco, TAMANHOS, MATERIAIS, ACABAMENTOS } from "../utils/precos.js";
+import { calcularPreco, TAMANHOS, ACABAMENTOS } from "../utils/precos.js";
 import {
   supabase,
   criarPedido,
@@ -31,24 +31,27 @@ async function pegarUsuarioLogado(req) {
 // cria o pedido "pendente" no banco e devolve o link de pagamento do Mercado Pago.
 pedidosRouter.post("/", async (req, res) => {
   try {
-    const { modelo, material, tamanho, acabamento, cliente } = req.body;
+    const { modelo, personagem, tamanho, acabamento, cliente } = req.body;
 
-    if (!TAMANHOS[tamanho] || !MATERIAIS[material] || !(acabamento in ACABAMENTOS)) {
+    if (!TAMANHOS[tamanho] || !(acabamento in ACABAMENTOS)) {
       return res.status(400).json({ erro: "Opções de configuração inválidas." });
     }
     if (!cliente?.nome || !cliente?.email) {
       return res.status(400).json({ erro: "Nome e e-mail do cliente são obrigatórios." });
     }
 
-    const preco = calcularPreco({ tamanho, material, acabamento });
+    const preco = calcularPreco({ tamanho, acabamento });
     const pedidoId = nanoid(12);
     const userId = await pegarUsuarioLogado(req); // null se o cliente não estiver logado (checkout como convidado)
+    
+    const nomePersonagem = personagem || "Arquivo Próprio";
 
     await criarPedido({
       id: pedidoId,
       user_id: userId,
       modelo,
-      material,
+      personagem: nomePersonagem,
+      material: "PLA Premium", // Fixado no banco para o histórico do cliente
       tamanho,
       acabamento,
       preco,
@@ -63,7 +66,7 @@ pedidosRouter.post("/", async (req, res) => {
         items: [
           {
             id: String(pedidoId),
-            title: `Sahir 3D — ${modelo || "peça personalizada"} (${tamanho}, ${material})`,
+            title: `Sahir 3D — ${modelo || "Personalizado"}: ${nomePersonagem} (${tamanho})`,
             description: String(acabamento),
             quantity: 1,
             currency_id: "BRL",
