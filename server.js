@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import { pedidosRouter, webhookRouter } from "./routes/pedidos.js";
+import { freteRouter } from "./routes/frete.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/pedidos", pedidosRouter);
 app.use("/api/webhooks", webhookRouter);
+app.use("/api/frete", freteRouter);
 
 const porta = process.env.PORT || 3000;
 app.listen(porta, () => {
